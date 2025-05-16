@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Hashify}",
+            "name": "Debug HashifyClient",
+            "program": "${workspaceFolder:Hashify}/.build/debug/HashifyClient",
+            "preLaunchTask": "swift: Build Debug HashifyClient"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Hashify}",
+            "name": "Release HashifyClient",
+            "program": "${workspaceFolder:Hashify}/.build/release/HashifyClient",
+            "preLaunchTask": "swift: Build Release HashifyClient"
+        }
+    ]
+}

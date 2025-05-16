@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation 
+    url: https://iroiro.dev/Hashify/documentation/hashify/
+    about: More information on using Hashify can be found here.
