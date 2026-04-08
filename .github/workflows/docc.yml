@@ -29,7 +29,7 @@ jobs:
             --transform-for-static-hosting \
             --output-path ./docs \
             --transform-for-static-hosting \
-            --hosting-base-path SHashify
+            --hosting-base-path Hashify
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
