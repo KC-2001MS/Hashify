@@ -21,24 +21,39 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0-latest"),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.4.0"),
+        .package(url: "https://github.com/pointfreeco/swift-macro-testing.git", from: "0.6.5"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
+        // Shared core module with hashing logic used by both the macro and the library.
+        .target(name: "HashifyCore"),
+
         // Macro implementation that performs the source transformation of a macro.
         .macro(
             name: "HashifyMacros",
             dependencies: [
+                "HashifyCore",
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
             ]
         ),
 
         // Library that exposes a macro as part of its API, which is used in client programs.
-        .target(name: "Hashify", dependencies: ["HashifyMacros"]),
+        .target(name: "Hashify", dependencies: ["HashifyMacros", "HashifyCore"]),
 
         // A client of the library, which is able to use the macro in its own code.
         .executableTarget(name: "HashifyClient", dependencies: ["Hashify"]),
+
+        // Test target using Swift Testing framework.
+        .testTarget(
+            name: "HashifyTests",
+            dependencies: [
+                "Hashify",
+                "HashifyMacros",
+                .product(name: "MacroTesting", package: "swift-macro-testing"),
+            ]
+        ),
 
     ]
 )

@@ -8,7 +8,7 @@ Thanks to all who have contributed to this project, and we look forward to worki
   - GitHub: KC-2001MS
   - Email: iroiro.work1234@gmail.com
   - Project initialization and maintenance
-<!-- 
+<!--
 ## Contributors
 
 - [名前](GitHubプロファイルリンク) - 主要な機能の開発

@@ -7,10 +7,8 @@
 
 import SwiftCompilerPlugin
 import SwiftSyntax
-import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-import CryptoKit
-import Foundation
+import HashifyCore
 
 /// Implementation of the `hashify` macro, which takes a string literal and a type of hashing algorithm and generates a hash value.
 /// For example
@@ -21,63 +19,50 @@ import Foundation
 ///
 /// "00e21cd306b86c0d806393e49d2da9f22794392d700898975099ca029ac4c2d4a5eae23519b20f65d9c9471c9074337662a2bd87640a6c42cea07fca 1743b585"
 public struct HashifyMacro: ExpressionMacro {
+
+    /// Built-in algorithms eligible for compile-time hashing.
+    /// User-defined extensions always expand to a runtime function call.
+    private static let builtInAlgorithms: Set<String> = [
+        "md5", "sha1", "sha256", "sha384", "sha512",
+    ]
+
     public static func expansion(
         of node: some FreestandingMacroExpansionSyntax,
         in context: some MacroExpansionContext
     ) throws -> ExprSyntax {
         let args = node.arguments
 
-        guard let stringArg = args.first(where: { $0.label == nil })?.expression.as(
-            StringLiteralExprSyntax.self
-        ),
-              let segment = stringArg.segments.first?.as(
-                StringSegmentSyntax.self
-              )
-        else {
+        guard let valueArg = args.first(where: { $0.label == nil }) else {
             throw HashifyError.notStringLiteral
         }
-        let input = segment.content.text
+        let valueExpr = valueArg.expression
 
-        let algorithm: String
+        // Determine the algorithm
+        let algorithmString: String
         if let algoArg = args.first(where: { $0.label?.text == "algorithm" })?.expression.as(
             MemberAccessExprSyntax.self
         ) {
-            algorithm = algoArg.declName.baseName.text.lowercased()
+            algorithmString = algoArg.declName.baseName.text.lowercased()
         } else {
-            algorithm = "sha256"
+            algorithmString = "sha256"
         }
 
-        let hashed = try hashString(input, algorithm: algorithm)
-        return "\"\(raw: hashed)\""
+        // Compile-time hashing: only for built-in algorithms with pure string literals
+        if builtInAlgorithms.contains(algorithmString),
+           let stringLiteral = valueExpr.as(StringLiteralExprSyntax.self),
+           stringLiteral.segments.allSatisfy({ $0.is(StringSegmentSyntax.self) }),
+           let algorithm = HashAlgorithm(rawValue: algorithmString) {
+            let input = stringLiteral.segments
+                .compactMap { $0.as(StringSegmentSyntax.self)?.content.text }
+                .joined()
+            let hashed = algorithm.hash(input)
+            return "\"\(raw: hashed)\""
+        }
+
+        // Runtime hashing: generate a direct call to HashAlgorithm.hash(_:)
+        return "HashAlgorithm.\(raw: algorithmString).hash(\(valueExpr))"
     }
 
-    private static func hashString(_ input: String, algorithm: String) throws -> String {
-        let data = Data(input.utf8)
-        switch algorithm {
-        case "sha256":
-            return SHA256
-                .hash(data: data)
-                .map { String(format: "%02x", $0) }
-                .joined()
-        case "sha512":
-            return SHA512
-                .hash(data: data)
-                .map { String(format: "%02x", $0) }
-                .joined()
-        case "md5":
-            return Insecure.MD5
-                .hash(data: data)
-                .map { String(format: "%02x", $0) }
-                .joined()
-        case "sha1":
-            return Insecure.SHA1
-                .hash(data: data)
-                .map { String(format: "%02x", $0) }
-                .joined()
-        default:
-            throw HashifyError.unsupportedAlgorithms(algorithm)
-        }
-    }
 }
 
 @main

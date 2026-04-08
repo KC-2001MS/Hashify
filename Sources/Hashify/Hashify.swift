@@ -7,6 +7,8 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
+@_exported import HashifyCore
+
 /// A macro that generates a hash value for a given string by specifying a string and a hash value algorithm.
 /// For example,
 ///
